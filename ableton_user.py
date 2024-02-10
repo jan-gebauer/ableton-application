@@ -4,6 +4,7 @@ from sqlite3 import Connection, Cursor
 import time
 
 
+# Considered an Entity as per Domain-Driven Design
 class User:
 
     def __init__(
@@ -20,6 +21,9 @@ class User:
         self.registration_epoch_seconds = registration_epoch_seconds
         self.activated = activated
 
+    # I could pepper the password as well but given the time limit
+    # and the unspecified number of users (therefore assume 1),
+    # this is enough.
     def hash_password_and_set_salt(self):
         salt = secrets.token_bytes(16)
         combined = self.password.encode("utf-8") + salt
@@ -66,7 +70,6 @@ class UserRepository:
         return True if self.get_user_by_email(user.email) is not None else False
 
     def update_user(self, user: User) -> User:
-        # Test this
         self.cursor.execute(
             "UPDATE user SET activated = ?, registration_date = ?, password = ?, salt = ? WHERE email = ?",
             (
@@ -109,6 +112,12 @@ class ActivationLinkRepository:
         return fetched_email[0] if fetched_email else None
 
 
+# Service in terms of Domain-Driven Design
+# The goal was to have as much domain logic in the User class
+# but there is also the question of how the maintainers of this
+# domain see the natural contours of the problem space.
+# E.g. in the authenticate method, do we check whether the user
+# is activated in the User class or in the method? Or elsewhere?
 class UserService:
 
     def __init__(
@@ -120,6 +129,9 @@ class UserService:
         self.activation_link_repository = activation_link_repository
         pass
 
+    # As per documentation, placeholders seem to be sufficient for
+    # protection against SQL Injection, therefore more sanitation
+    # should not be necessary.
     def register(self, email, partially_hashed_password):
         """
         Returns an an activation link
