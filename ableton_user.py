@@ -5,6 +5,10 @@ import time
 
 
 # Considered an Entity as per Domain-Driven Design
+# The design could be improved by adding a surrogate key as the primary key.
+# For example, the email could also change but the current model
+# is somewhat hostile to this as seen in the method update user in the UserRepository.
+# Emails are also recycled by email providers, which makes them unstable.
 class User:
 
     def __init__(
